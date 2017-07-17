@@ -1,10 +1,13 @@
 package com.wificity.onecard.centerholiday;
 
 import android.os.RemoteException;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.sunmi.pay.hardware.aidl.AidlConstants;
@@ -19,7 +22,7 @@ import java.util.ArrayList;
 
 import sunmi.paylib.SunmiPayKernel;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String NO_KEY = "------------";
     private SunmiPayKernel mSunmiPayKernel;
@@ -61,13 +64,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void initUI(boolean enabled)
     {
-        findViewById(R.id.btnSwingCard).setEnabled(enabled);
-        findViewById(R.id.btnSwingCard).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                swingCard();
-            }
-        });
+        if(enabled)
+        {
+            findViewById(R.id.btnSwingCard).setVisibility(View.VISIBLE);
+            findViewById(R.id.btnEnterRoomNumber).setVisibility(View.VISIBLE);
+        }else{
+            findViewById(R.id.btnSwingCard).setVisibility(View.INVISIBLE);
+            findViewById(R.id.btnEnterRoomNumber).setVisibility(View.INVISIBLE);
+        }
+
+        findViewById(R.id.btnSwingCard).setOnClickListener(this);
+        findViewById(R.id.btnEnterRoomNumber).setOnClickListener(this);
         if(enabled)
             swingCard();
     }
@@ -242,4 +249,109 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    /// Room Number Dialog
+
+    AlertDialog roomNumberDialog;
+    EditText roomNumberEditText;
+    private void showEnterRoomNumberDialog()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View v = View.inflate(this, R.layout.dialog_enter_room_number, null);
+        builder.setView(v);
+        builder.setCancelable(true);
+
+        roomNumberEditText = (EditText) v.findViewById(R.id.editRoomNumber);
+        roomNumberEditText.setCursorVisible(false);
+        v.findViewById(R.id.button_0).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_1).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_2).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_3).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_4).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_5).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_6).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_7).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_8).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_9).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_del).setOnClickListener(numberButtonOnClickListener);
+        v.findViewById(R.id.button_confirm).setOnClickListener(numberButtonOnClickListener);
+
+        roomNumberDialog = builder.create();
+        roomNumberDialog.show();
+    }
+
+    private View.OnClickListener numberButtonOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            switch (view.getId())
+            {
+                case R.id.button_0:
+                    performKeyDown(KeyEvent.KEYCODE_0);
+                    break;
+                case R.id.button_1:
+                    performKeyDown(KeyEvent.KEYCODE_1);
+                    break;
+                case R.id.button_2:
+                    performKeyDown(KeyEvent.KEYCODE_2);
+                    break;
+                case R.id.button_3:
+                    performKeyDown(KeyEvent.KEYCODE_3);
+                    break;
+                case R.id.button_4:
+                    performKeyDown(KeyEvent.KEYCODE_4);
+                    break;
+                case R.id.button_5:
+                    performKeyDown(KeyEvent.KEYCODE_5);
+                    break;
+                case R.id.button_6:
+                    performKeyDown(KeyEvent.KEYCODE_6);
+                    break;
+                case R.id.button_7:
+                    performKeyDown(KeyEvent.KEYCODE_7);
+                    break;
+                case R.id.button_8:
+                    performKeyDown(KeyEvent.KEYCODE_8);
+                    break;
+                case R.id.button_9:
+                    performKeyDown(KeyEvent.KEYCODE_9);
+                    break;
+                case R.id.button_del:
+                    performKeyDown(KeyEvent.KEYCODE_DEL);
+                    break;
+                case R.id.button_confirm:
+                    String roomNumber = roomNumberEditText.getText().toString();
+                    if(roomNumber!=null && roomNumber.length()>0) {
+                        //TODO
+                        //Common.sendShortMessage(Common.TAG_BYROOM + roomNumberEditText.getText() + Common.TAG_BYROOM, getMessageHandler);
+                        roomNumberDialog.dismiss();
+                    }
+                    break;
+            }
+        }
+    };
+
+    private void performKeyDown(final int keyCode)
+    {
+        if(roomNumberEditText==null)
+            return;
+        String v = roomNumberEditText.getText().toString();
+        if(keyCode == KeyEvent.KEYCODE_DEL)
+            roomNumberEditText.setText(v.length() >0 ? v.substring(0, v.length() - 1) : "");
+        else
+            roomNumberEditText.setText( v + (char)(keyCode + 41));
+    }
+
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch(id)
+        {
+            case R.id.btnSwingCard:
+                swingCard();
+                break;
+            case R.id.btnEnterRoomNumber:
+                showEnterRoomNumberDialog();
+                break;
+        }
+    }
 }

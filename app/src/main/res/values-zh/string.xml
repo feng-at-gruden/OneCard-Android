@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <string name="app_name">中心假日酒店一卡通</string>
+
+    <string name="btn_swingCard">刷卡</string>
+
+
+    <string name="dialog_about_mct">
+        <![CDATA[
+        <b>智慧酒店一卡通<br /><br />
+        &#8226; 版本: %1$s<br />
+        &#8226; 技术支持: 青岛全网通信息技术有限公司
+        ]]>
+    </string>
+
+    <string name="text_guest_info">客人信息</string>
+    <string name="text_information">提示</string>
+
+    <string name="action_registration">登记</string>
+    <string name="action_input_room_number">输入房间号</string>
+
+    <string name="text_input_room_number">请输入房间号: </string>
+
+    <string name="action_show_about">关于</string>
+    <string name="action_ok">确定</string>
+    <string name="action_del">删除</string>
+
+    <string name="message_network_error">网络错误: %1$s</string>
+    <string name="message_book_success">预订成功</string>
+    <string name="message_book_error">预订失败: %1$s</string>
+    <string name="message_invalid_input">错误的卡号或者房间号: %1$s</string>
+    <string name="message_out_of_service">超过服务时间: %1$s</string>
+
+</resources>

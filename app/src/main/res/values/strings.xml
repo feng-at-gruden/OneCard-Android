@@ -1,5 +1,24 @@
 <resources>
-    <string name="app_name">中心假日酒店一卡通</string>
+    <string name="app_name">Holiday Inn Smart HOTEL</string>
 
-    <string name="btn_swingCard">刷卡</string>
+    <string name="btn_swingCard">Swing Card</string>
+
+
+
+
+    <string name="message_network_error">Network error: %1$s</string>
+    <string name="message_book_success">Book Success!</string>
+    <string name="message_book_error">Book Failed!: %1$s</string>
+    <string name="message_invalid_input">Invalid card or room number!: %1$s</string>
+    <string name="message_out_of_service">Out of service: %1$s</string>
+
+    <string name="action_input_room_number">Input Room Number</string>
+    <string name="text_input_room_number">Room Number: </string>
+
+    <string name="text_guest_info">Guest Information</string>
+    <string name="text_information">Information</string>
+
+
+    <string name="action_del">DEL</string>
+
 </resources>

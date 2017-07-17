@@ -5,15 +5,49 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/middle_gray"
     tools:context="com.wificity.onecard.centerholiday.MainActivity">
 
 
-    <Button
-        android:id="@+id/btnSwingCard"
+    <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="@string/btn_swingCard" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:scaleType="fitStart"
+        android:layout_marginTop="30dp"
+        android:src="@drawable/insert_card"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="16dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/btnSwingCard"
+            android:layout_marginRight="8dp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:drawableTop="@drawable/tools"
+            android:visibility="invisible"
+            android:text="@string/btn_swingCard" />
+
+        <Button
+            android:id="@+id/btnEnterRoomNumber"
+            android:layout_marginLeft="8dp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:drawableTop="@drawable/read_tag"
+            android:visibility="invisible"
+            android:text="@string/action_input_room_number" />
+
+    </LinearLayout>
+
+
 
 
 </RelativeLayout>
