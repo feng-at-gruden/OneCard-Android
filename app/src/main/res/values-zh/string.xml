@@ -9,7 +9,6 @@
 
     <string name="dialog_about_mct">
         <![CDATA[
-        <b>智慧酒店一卡通<br /><br />
         &#8226; 版本: %1$s<br />
         &#8226; 技术支持: 青岛全网通信息技术有限公司
         ]]>
@@ -18,7 +17,7 @@
     <string name="text_guest_info">客人信息</string>
     <string name="text_information">提示</string>
 
-    <string name="action_registration">登记</string>
+    <string name="action_registration">打卡登记</string>
     <string name="action_input_room_number">输入房间号</string>
 
     <string name="text_input_room_number">请输入房间号: </string>

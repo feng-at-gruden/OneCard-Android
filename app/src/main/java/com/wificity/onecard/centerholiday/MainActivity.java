@@ -1,13 +1,23 @@
 package com.wificity.onecard.centerholiday;
 
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Message;
 import android.os.RemoteException;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sunmi.pay.hardware.aidl.AidlConstants;
@@ -15,7 +25,10 @@ import com.sunmi.pay.hardware.aidl.bean.CardInfo;
 import com.sunmi.pay.hardware.aidl.readcard.ReadCardCallback;
 import com.sunmi.pay.hardware.aidl.readcard.ReadCardOpt;
 import com.sunmi.pay.hardware.aidl.system.BasicOpt;
+import com.wificity.onecard.centerholiday.common.Constants;
 import com.wificity.onecard.centerholiday.utils.KeyUtils;
+import com.wificity.onecard.centerholiday.common.MySocketThread;
+import com.wificity.onecard.centerholiday.utils.NetworkUtils;
 import com.wificity.onecard.centerholiday.utils.StringByteUtils;
 
 import java.util.ArrayList;
@@ -27,9 +40,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String NO_KEY = "------------";
     private SunmiPayKernel mSunmiPayKernel;
     private ReadCardOpt mReadCardOpt;
-
-    final int timeOut = 120;
-    final int block = 8;
 
 
     @Override
@@ -44,6 +54,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        NetworkUtils.closeSocket();
         if (OneCardApplication.mBasicOpt != null) {
             try {
                 //关闭NFC天线
@@ -62,6 +78,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.general_options, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menuMainAbout:
+                onShowAboutDialog();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+
     private void initUI(boolean enabled)
     {
         if(enabled)
@@ -75,9 +109,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         findViewById(R.id.btnSwingCard).setOnClickListener(this);
         findViewById(R.id.btnEnterRoomNumber).setOnClickListener(this);
-        if(enabled)
-            swingCard();
     }
+
+
+
+    //读卡相关
+
+    final int timeOut = 60;
+    final int block = 8;
+
 
     /**
      * 刷卡
@@ -104,7 +144,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (result == 0) {
                 m1ReadBlock(key);
             } else {
-                Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
+                beep(2);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -146,14 +187,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 {
                     dataStr += ret[i];
                 }
-                Toast.makeText(this, dataStr, Toast.LENGTH_SHORT).show();
-                beep();
-                //TODO, send data
-
-                //Waiting for next time
-                swingCard();
+                //Toast.makeText(this, dataStr, Toast.LENGTH_SHORT).show();
+                NetworkUtils.sendShortMessage(Constants.TAG_BYCARD + dataStr + Constants.TAG_BYCARD, getMessageHandler);
+                beep(1);
             }else{
-                Toast.makeText(this, "读卡错误", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "读卡错误", Toast.LENGTH_SHORT).show();
+                beep(2);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -199,10 +238,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
 
-    private void beep() {
+    private void beep(int k) {
         BasicOpt mBasicOpt = OneCardApplication.mBasicOpt;
         try {
-            mBasicOpt.buzzerOnDevice(1);
+            mBasicOpt.buzzerOnDevice(k);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -249,7 +288,112 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-    /// Room Number Dialog
+
+
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch(id)
+        {
+            case R.id.btnSwingCard:
+                swingCard();
+                break;
+            case R.id.btnEnterRoomNumber:
+                showEnterRoomNumberDialog();
+                break;
+        }
+    }
+
+
+    private final Handler getMessageHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case MySocketThread.ServerData:
+                    String content = msg.obj.toString();
+                    if( content.indexOf(Constants.REC_MSG) >=0 ) {
+                        showMessageDialog(content.replace(Constants.REC_MSG, ""), null);
+                    }else if( content.indexOf(Constants.REC_BOOK_SUCCESS) >=0 ){
+                        showMessageDialog(getString(R.string.message_book_success), null);
+                    }else if( content.indexOf(Constants.REC_INVALID_CARD_OR_ROOM) >=0 ){
+                        showMessageDialog(getString(R.string.message_invalid_input, content), null);
+                    }else if( content.indexOf(Constants.REC_OUT_OF_SERVICE) >=0 ){
+                        showMessageDialog(getString(R.string.message_out_of_service, content), null);
+                    }else if( content.indexOf(Constants.REC_BOOK_ERROR) >=0 ){
+                        showMessageDialog(getString(R.string.message_book_error, content), null);
+                    }else{
+                        closeRoomInfoDialog();
+                        showRoomInfoDialog(content);
+                    }
+                    break;
+                case MySocketThread.SocketException:
+                    Toast.makeText(MainActivity.this, "网络错误", Toast.LENGTH_SHORT).show();
+                    break;
+                case MySocketThread.GetKeyData:
+                    //tagDataView.setText(msg.obj.toString());
+                    break;
+            }
+        }
+    };
+
+
+
+    //客房信息对话框
+
+    AlertDialog roomInfoDialog;
+    private void showRoomInfoDialog(String content)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View v = View.inflate(this, R.layout.dialog_guest_info, null);
+        builder.setView(v);
+        builder.setCancelable(true);
+        TextView guestInfoView= (TextView) v.findViewById(R.id.guestInfo);
+        guestInfoView.setText(content);
+
+        v.findViewById(R.id.btnRegister).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                NetworkUtils.sendShortMessage(Constants.CMD_REGISTRATION_BYCARD, getMessageHandler);
+                closeRoomInfoDialog();
+            }
+        });
+        roomInfoDialog = builder.create();
+        WindowManager.LayoutParams layoutParams = roomInfoDialog.getWindow().getAttributes();
+        layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
+        layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT;
+        Window window = roomInfoDialog.getWindow();
+        window.setAttributes(layoutParams);
+        window.setWindowAnimations(R.style.MyAlertDialogStyle);
+
+        roomInfoDialog.show();
+    }
+
+    private void closeRoomInfoDialog()
+    {
+        if(roomInfoDialog != null && roomInfoDialog.isShowing())
+            roomInfoDialog.dismiss();
+
+        if(roomNumberDialog != null && roomNumberDialog.isShowing())
+            roomNumberDialog.dismiss();
+    }
+
+    private void showMessageDialog(String content, DialogInterface.OnClickListener listener)
+    {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.text_information)
+                .setMessage(content)
+                .setIcon(R.mipmap.ic_launcher)
+                .setPositiveButton(R.string.action_ok, listener).create();
+        Window window = dialog.getWindow();
+        window.setWindowAnimations(R.style.MyAlertDialogStyle);
+        dialog.show();
+    }
+
+
+
+    //房间号码对话框
 
     AlertDialog roomNumberDialog;
     EditText roomNumberEditText;
@@ -320,8 +464,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case R.id.button_confirm:
                     String roomNumber = roomNumberEditText.getText().toString();
                     if(roomNumber!=null && roomNumber.length()>0) {
-                        //TODO
-                        //Common.sendShortMessage(Common.TAG_BYROOM + roomNumberEditText.getText() + Common.TAG_BYROOM, getMessageHandler);
+                        NetworkUtils.sendShortMessage(Constants.TAG_BYROOM + roomNumberEditText.getText() + Constants.TAG_BYROOM, getMessageHandler);
                         roomNumberDialog.dismiss();
                     }
                     break;
@@ -341,17 +484,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    @Override
-    public void onClick(View view) {
-        int id = view.getId();
-        switch(id)
-        {
-            case R.id.btnSwingCard:
-                swingCard();
-                break;
-            case R.id.btnEnterRoomNumber:
-                showEnterRoomNumberDialog();
-                break;
-        }
+    //
+    private void onShowAboutDialog() {
+        String v = "0.2";
+        try{
+            v = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {}
+        CharSequence styledText = Html.fromHtml(getString(R.string.dialog_about_mct, v));
+        AlertDialog ad = new AlertDialog.Builder(this)
+                .setTitle(R.string.app_name)
+                .setMessage(styledText)
+                .setIcon(R.mipmap.ic_launcher)
+                .setPositiveButton(R.string.action_ok,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Do nothing.
+                            }
+                        }).create();
+        ad.show();
+        // Make links clickable.
+        ((TextView) ad.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
     }
 }
