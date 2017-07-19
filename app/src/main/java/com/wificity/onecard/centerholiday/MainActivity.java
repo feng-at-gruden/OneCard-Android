@@ -192,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 beep(1);
             }else{
                 //Toast.makeText(this, "读卡错误", Toast.LENGTH_SHORT).show();
+                led(4);
                 beep(2);
             }
         } catch (RemoteException e) {
@@ -246,6 +247,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             e.printStackTrace();
         }
     }
+
+    /**
+     * 控制LED灯
+     * ledIndex: 设备上的LED索引，1~4；4-红，3-绿，2-黄，1-蓝
+     * ledStatus：LED状态，0表示LED灭，1表示LED亮；
+     */
+    private void led(int ledIndex)
+    {
+        BasicOpt mBasicOpt = OneCardApplication.mBasicOpt;
+        try{
+            mBasicOpt.ledStatusOnDevice(ledIndex, 1);
+            Thread.sleep(250);
+            mBasicOpt.ledStatusOnDevice(ledIndex, 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     /**
      * 连接支付SDK
@@ -317,12 +337,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         showMessageDialog(content.replace(Constants.REC_MSG, ""), null);
                     }else if( content.indexOf(Constants.REC_BOOK_SUCCESS) >=0 ){
                         showMessageDialog(getString(R.string.message_book_success), null);
+                        //Book success
+                        led(3);
                     }else if( content.indexOf(Constants.REC_INVALID_CARD_OR_ROOM) >=0 ){
                         showMessageDialog(getString(R.string.message_invalid_input, content), null);
+                        led(4);
                     }else if( content.indexOf(Constants.REC_OUT_OF_SERVICE) >=0 ){
                         showMessageDialog(getString(R.string.message_out_of_service, content), null);
+                        led(4);
                     }else if( content.indexOf(Constants.REC_BOOK_ERROR) >=0 ){
                         showMessageDialog(getString(R.string.message_book_error, content), null);
+                        led(4);
                     }else{
                         closeRoomInfoDialog();
                         showRoomInfoDialog(content);
@@ -466,6 +491,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if(roomNumber!=null && roomNumber.length()>0) {
                         NetworkUtils.sendShortMessage(Constants.TAG_BYROOM + roomNumberEditText.getText() + Constants.TAG_BYROOM, getMessageHandler);
                         roomNumberDialog.dismiss();
+                    }else{
+
                     }
                     break;
             }
@@ -477,6 +504,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(roomNumberEditText==null)
             return;
         String v = roomNumberEditText.getText().toString();
+        if(v.length()>=6 && keyCode != KeyEvent.KEYCODE_DEL)
+            return;
+        //beep(1);
         if(keyCode == KeyEvent.KEYCODE_DEL)
             roomNumberEditText.setText(v.length() >0 ? v.substring(0, v.length() - 1) : "");
         else

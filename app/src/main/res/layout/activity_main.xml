@@ -31,7 +31,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:drawableTop="@drawable/tools"
+            android:drawableTop="@drawable/icon4"
             android:visibility="invisible"
             android:text="@string/btn_swingCard" />
 
@@ -41,7 +41,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:drawableTop="@drawable/read_tag"
+            android:drawableTop="@drawable/icon1"
             android:visibility="invisible"
             android:text="@string/action_input_room_number" />
 

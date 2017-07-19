@@ -34,9 +34,9 @@
 
     <Button
         android:id="@+id/btnRegister"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:drawableTop="@drawable/write_tag"
+        android:drawableTop="@drawable/icon6"
         android:text="@string/action_registration"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
