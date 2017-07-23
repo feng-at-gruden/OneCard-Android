@@ -235,14 +235,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     ReadCardCallback mReadCardCallback = new ReadCardCallback.Stub() {
-        @Override
-        public void onStartReadCard() throws RemoteException {
-
-        }
-
-        @Override
-        public void onFindMAGCard(CardInfo cardInfo) throws RemoteException {
-        }
 
         @Override
         public void onFindNFCCard(final CardInfo cardInfo) throws RemoteException {
@@ -253,6 +245,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     m1Auth(cardInfo.uuid);
                 }
             });
+        }
+
+        @Override
+        public void onStartReadCard() throws RemoteException {
+        }
+
+        @Override
+        public void onFindMAGCard(CardInfo cardInfo) throws RemoteException {
         }
 
         @Override
