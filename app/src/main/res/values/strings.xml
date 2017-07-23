@@ -4,8 +4,16 @@
     <string name="btn_swingCard">Swing Card</string>
 
 
+    <string name="dialog_about_mct">
+        <![CDATA[
+        &#8226; Version: %1$s<br />
+        &#8226; www.any-com.com
+        ]]>
+    </string>
 
-
+    <string name="action_registration">Check In</string>
+    <string name="action_show_about">About</string>
+    <string name="action_ok">Ok</string>
     <string name="message_network_error">Network error: %1$s</string>
     <string name="message_book_success">Book Success!</string>
     <string name="message_book_error">Book Failed!: %1$s</string>
