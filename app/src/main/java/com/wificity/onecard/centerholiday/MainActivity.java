@@ -2,6 +2,8 @@ package com.wificity.onecard.centerholiday;
 
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
@@ -40,7 +42,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String NO_KEY = "------------";
     private SunmiPayKernel mSunmiPayKernel;
     private ReadCardOpt mReadCardOpt;
-
+    private SoundPool soundPool;
+    private final boolean manualSwingCard = false;          //自动刷卡 手动刷卡切换
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +51,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         initUI(false);
+        soundPool= new SoundPool(10, AudioManager.STREAM_SYSTEM,5);
+        soundPool.load(this,R.raw.welcome,1);
+
         connSunMinService();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if(mReadCardOpt != null && !manualSwingCard)
+            swingCard();
     }
 
     @Override
@@ -62,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         NetworkUtils.closeSocket();
         if (OneCardApplication.mBasicOpt != null) {
             try {
+                mReadCardOpt.cancelCheckCard();
                 //关闭NFC天线
                 OneCardApplication.mBasicOpt.RFOff();
             } catch (Exception e) {
@@ -102,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         {
             findViewById(R.id.btnSwingCard).setVisibility(View.VISIBLE);
             findViewById(R.id.btnEnterRoomNumber).setVisibility(View.VISIBLE);
+            if(mReadCardOpt!=null && !manualSwingCard)    // waiting for swing card automatically
+                swingCard();
         }else{
             findViewById(R.id.btnSwingCard).setVisibility(View.INVISIBLE);
             findViewById(R.id.btnEnterRoomNumber).setVisibility(View.INVISIBLE);
@@ -114,18 +125,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     //读卡相关
-
     final int timeOut = 60;
     final int block = 8;
-
 
     /**
      * 刷卡
      */
     public void swingCard() {
         try {
+            mReadCardOpt.cancelCheckCard();
             //支持磁卡，IC，NFC
-            int allType = AidlConstants.CardType.MAG | AidlConstants.CardType.IC | AidlConstants.CardType.NFC;
+            //int allType = AidlConstants.CardType.MAG | AidlConstants.CardType.IC | AidlConstants.CardType.NFC;
+            int allType = AidlConstants.CardType.NFC;
             mReadCardOpt.readCard(allType, mReadCardCallback, timeOut);
         } catch (Exception e) {
             e.printStackTrace();
@@ -190,6 +201,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //Toast.makeText(this, dataStr, Toast.LENGTH_SHORT).show();
                 NetworkUtils.sendShortMessage(Constants.TAG_BYCARD + dataStr + Constants.TAG_BYCARD, getMessageHandler);
                 beep(1);
+
+                if(mReadCardOpt!=null && !manualSwingCard)    //waiting for next time swing card
+                    swingCard();
             }else{
                 //Toast.makeText(this, "读卡错误", Toast.LENGTH_SHORT).show();
                 led(4);
@@ -233,7 +247,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onTimeOut() throws RemoteException {
-            Toast.makeText(getBaseContext(), "刷卡超时", Toast.LENGTH_SHORT).show();
         }
 
     };
@@ -246,6 +259,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void playSound()
+    {
+        soundPool.play(1,1, 1, 0, 0, 1);
     }
 
     /**
@@ -339,6 +357,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         showMessageDialog(getString(R.string.message_book_success), null);
                         //Book success
                         led(3);
+                        playSound();
                     }else if( content.indexOf(Constants.REC_INVALID_CARD_OR_ROOM) >=0 ){
                         showMessageDialog(getString(R.string.message_invalid_input, content), null);
                         led(4);
