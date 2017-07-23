@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     public void swingCard() {
         try {
-            mReadCardOpt.cancelCheckCard();
+            //mReadCardOpt.cancelCheckCard();
             //支持磁卡，IC，NFC
             //int allType = AidlConstants.CardType.MAG | AidlConstants.CardType.IC | AidlConstants.CardType.NFC;
             int allType = AidlConstants.CardType.NFC;
