@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     //读卡相关
-    final int timeOut = 60;
+    final int timeOut = 120;
     final int block = 8;
 
     /**
@@ -157,6 +157,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 //Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
                 beep(2);
+                //Try next
+                if(mReadCardOpt!=null && !manualSwingCard)
+                {
+                    mReadCardOpt.cancelCheckCard();
+                    try {
+                        Thread.sleep(1000);
+                    }catch(Exception e){}
+                    swingCard();
+                }
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -208,6 +217,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //Toast.makeText(this, "读卡错误", Toast.LENGTH_SHORT).show();
                 led(4);
                 beep(2);
+
+                if(mReadCardOpt!=null && !manualSwingCard)
+                {
+                    mReadCardOpt.cancelCheckCard();
+                    try {
+                        Thread.sleep(1000);
+                    }catch(Exception e){}
+                    swingCard();
+                }
             }
         } catch (RemoteException e) {
             e.printStackTrace();
