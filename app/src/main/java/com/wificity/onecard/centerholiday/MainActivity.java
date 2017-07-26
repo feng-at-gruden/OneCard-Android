@@ -43,7 +43,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private SunmiPayKernel mSunmiPayKernel;
     private ReadCardOpt mReadCardOpt;
     private SoundPool soundPool;
-    private final boolean manualSwingCard = false;          //自动刷卡 手动刷卡切换
+    private final boolean manualSwingCard = false;          //自动刷卡/手动点击按钮刷卡 模式切换
+    private final boolean preventContinueSwingCard = true;  //防止连续刷卡 5秒内统一卡不允许连续打卡
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +128,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //读卡相关
     final int timeOut = 120;
     final int block = 8;
+    private String lastUuid = "";
+    private long lastCheckTime;
+
+
+    private void tryNextSwingCard()
+    {
+        if(mReadCardOpt!=null && !manualSwingCard)
+        {
+            try {
+                mReadCardOpt.cancelCheckCard();
+                Thread.sleep(1000);
+            }catch(Exception e){}
+            swingCard();
+        }
+    }
 
     /**
      * 刷卡
@@ -147,25 +163,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 授权
      */
     private void m1Auth(String uuid) {
+
+        long tick = System.currentTimeMillis() - lastCheckTime;
+        if(uuid.equals(lastUuid) && tick < 5000 && preventContinueSwingCard) {
+            Toast.makeText(this, "请勿重复打卡", Toast.LENGTH_SHORT).show();
+            tryNextSwingCard();
+            return;
+        }
+
         try {
             byte[] uid = StringByteUtils.HexString2Bytes(uuid);
             byte[] key = KeyUtils.getkey(uid);
 
             int result = mReadCardOpt.m1Auth(0, block, key);
             if (result == 0) {
+                //认证成功
+                lastUuid = uuid;
+                lastCheckTime = System.currentTimeMillis();
+
                 m1ReadBlock(key);
             } else {
-                //Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "请把卡靠近天线附近", Toast.LENGTH_SHORT).show();
                 beep(2);
+                led(4);
+
                 //Try next
-                if(mReadCardOpt!=null && !manualSwingCard)
-                {
-                    mReadCardOpt.cancelCheckCard();
-                    try {
-                        Thread.sleep(1000);
-                    }catch(Exception e){}
-                    swingCard();
-                }
+                tryNextSwingCard();
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -211,21 +234,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 NetworkUtils.sendShortMessage(Constants.TAG_BYCARD + dataStr + Constants.TAG_BYCARD, getMessageHandler);
                 beep(1);
 
-                if(mReadCardOpt!=null && !manualSwingCard)    //waiting for next time swing card
-                    swingCard();
+                tryNextSwingCard();
             }else{
-                //Toast.makeText(this, "读卡错误", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "读卡错误, 请重试", Toast.LENGTH_SHORT).show();
                 led(4);
                 beep(2);
 
-                if(mReadCardOpt!=null && !manualSwingCard)
-                {
-                    mReadCardOpt.cancelCheckCard();
-                    try {
-                        Thread.sleep(1000);
-                    }catch(Exception e){}
-                    swingCard();
-                }
+                tryNextSwingCard();
             }
         } catch (RemoteException e) {
             e.printStackTrace();
